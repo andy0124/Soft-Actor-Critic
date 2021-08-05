@@ -1,25 +1,32 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions import Normal
     
     
     
-class StocasticPolicy(nn.Module) :
+class StochasticPolicy(nn.Module) : #Gausian
     def __init__(self, stateInputNum, HiddenLayerNum, actionInputNum) -> None:
-        super(StocasticPolicy,self).__init__()
+        super(StochasticPolicy,self).__init__()
         self.hidden1 = nn.Linear(stateInputNum, HiddenLayerNum)
         self.hidden2 = nn.Linear(HiddenLayerNum, HiddenLayerNum)
-        
-        self.hidden3 = nn.Linear(HiddenLayerNum, actionInputNum)
 
+        self.meanlayer = nn.Linear(HiddenLayerNum, actionInputNum)
+        self.stdlayer = nn.Linear(HiddenLayerNum, actionInputNum)
     def forward(self, state):
         x = F.relu(self.hidden1(state))
         x = F.relu(self.hidden2(x))
-        x = self.hidden3(x)
+        
+        mean = self.meanlayer(x)
+        std = self.stdlayer(x)
 
-        return x
+        return mean, std
 
     def sample(self, state):
+        mean , std = self.forward(state)
+        gaussian = Normal(mean, std)
+        smp = gaussian.rsample()
+        
         pass
 
 
