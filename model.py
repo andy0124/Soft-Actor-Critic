@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal
     
-    
+epsilon = 1e-6   
     
 class StochasticPolicy(nn.Module) : #Gausian
     def __init__(self, stateInputNum, HiddenLayerNum, actionInputNum) -> None:
@@ -24,10 +24,18 @@ class StochasticPolicy(nn.Module) : #Gausian
 
     def sample(self, state):
         mean , std = self.forward(state)
-        gaussian = Normal(mean, std)
-        smp = gaussian.rsample()
+        normal = Normal(mean, std)
+        x_t = normal.rsample()
         
-        pass
+        #여기서 부터 좀...
+        y_t = torch.tanh(x_t)
+        action = y_t * self.action_scale + self.action_bias
+        log_prob = normal.log_prob(x_t)
+        # Enforcing Action Bound
+        log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon)
+        log_prob = log_prob.sum(1, keepdim=True)
+        mean = torch.tanh(mean) * self.action_scale + self.action_bias
+        return action, log_prob, mean
 
 
 
@@ -56,9 +64,11 @@ class DoubleQnetwork(nn.Module) :
 
     
 class valueNetwork(nn.Module) :
-    def __init__(self):
+    def __init__(self, stateInputNum, HiddenLayerNum,):
         super().__init__()
-
+        self.hidden1 = nn.Linear(stateInputNum, HiddenLayerNum)
+        self.hidden2 = nn.Linear(HiddenLayerNum, HiddenLayerNum)
+        self.hidden3 = nn.Linear(HiddenLayerNum, 1)
 
 
         
