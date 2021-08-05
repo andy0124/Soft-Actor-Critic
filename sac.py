@@ -8,7 +8,7 @@ class sac(object):
     def __init__(self,stateNum, actionNum, hiddenNum, learningRate) -> None:
         super().__init__()
         
-        self.actor = model.DeterministicPolicy(stateNum, hiddenNum, actionNum)
+        self.actor = model.StochasticPolicy(stateNum, hiddenNum, actionNum)
         self.actorOptimizer = Adam(self.actor.parameters, learningRate)
 
         self.critic = model.DoubleQnetwork(actionNum, stateNum, hiddenNum)
