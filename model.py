@@ -70,6 +70,12 @@ class valueNetwork(nn.Module) :
         self.hidden2 = nn.Linear(HiddenLayerNum, HiddenLayerNum)
         self.hidden3 = nn.Linear(HiddenLayerNum, 1)
 
+    def forward(self, state):
+        x = F.relu(self.hidden1(state))
+        x = F.relu(self.hidden2(x))
+        x = self.hidden3(x)
+
+        return x
 
         
 
