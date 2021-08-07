@@ -8,4 +8,5 @@ class replayBuffer(object):
         self.buffer.append((state,action,reward,nextState))
 
     def sample():
+        # Todo 랜덤으로 뽑히게 하기
         pass

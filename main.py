@@ -4,6 +4,8 @@ import model
 import replay
 import sac
 
+minimum_batch_size = 20
+
 
 if __name__ == '__main__':
 
@@ -29,7 +31,11 @@ if __name__ == '__main__':
             #replay에 transition 넣기
             rpb.push((pastObs,action, reward, observation))
 
-
+            # 파리미터 학습
+            #근데 원래 에피소드 중에 업데이트 하는건가?
+            if rpb.buffer.count()> minimum_batch_size :
+                transition = rpb.sample()
+                sacModel.updateParameter(transition)
 
 
 
@@ -38,7 +44,7 @@ if __name__ == '__main__':
             step = step + 1
 
         
-        # 파리미터 학습
+        
         
 
 
