@@ -27,14 +27,15 @@ class StochasticPolicy(nn.Module) : #Gausian
         normal = Normal(mean, std)
         x_t = normal.rsample()
         
-        #여기서 부터 좀...
+        
         y_t = torch.tanh(x_t)
-        action = y_t * self.action_scale + self.action_bias
+        # action = y_t * self.action_scale + self.action_bias # action scale, epsilong 아랑보기
+        action = y_t
         log_prob = normal.log_prob(x_t)
         # Enforcing Action Bound
-        log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon)
-        log_prob = log_prob.sum(1, keepdim=True)
-        mean = torch.tanh(mean) * self.action_scale + self.action_bias
+        log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon) #이건 왜?
+        log_prob = log_prob.sum(1, keepdim=True) # 이건 왜?
+        mean = torch.tanh(mean)
         return action, log_prob, mean
 
 

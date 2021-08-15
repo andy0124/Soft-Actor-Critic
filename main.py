@@ -1,6 +1,5 @@
 import numpy as np
 import gym
-import model
 import replay
 import sac
 
@@ -12,7 +11,7 @@ if __name__ == '__main__':
     env = gym.make('HalfCheetah-v2')
     env.reset()
 
-    rpb = replay.replayBuffer()
+    rpb = replay.replayBuffer(100)
     sacModel = sac.SAC(1,1,1,1)
 
     for episode in range(100) :
@@ -22,7 +21,10 @@ if __name__ == '__main__':
         while True :
             env.render()
             
-            action = env.action_space.sample() # Todo : 이부분은 나중에 sac로 대체할거다
+            #action = env.action_space.sample() # Todo : 이부분은 나중에 sac로 대체할거다
+
+            action, q1, q2, v = sacModel.sample(pastObs)
+
             observation, reward, done, info = env.step(action)
             if done:
                 print("Episode finished after {} timesteps".format(step+1))
@@ -34,7 +36,7 @@ if __name__ == '__main__':
             # 파리미터 학습
             #근데 원래 에피소드 중에 업데이트 하는건가?
             if rpb.buffer.count()> minimum_batch_size :
-                transition = rpb.sample()
+                transition = rpb.sample(1)
                 sacModel.updateParameter(transition)
 
 
