@@ -13,26 +13,21 @@ class SAC(object):
         
         #policy 모델 & optimizer 설정
         self.actor = model.StochasticPolicy(stateNum, hiddenNum, actionNum)
-        self.actorOptimizer = Adam(self.actor.parameters, learningRate)
+        self.actorOptimizer = Adam(self.actor.parameters(), learningRate)
 
         #Q 함수 네트워크 모델 & optimizer 설정
         self.Qnet = model.DoubleQnetwork(actionNum, stateNum, hiddenNum)
-        self.QnetOptimizer = Adam(self.Qnet.parameters, learningRate)
+        self.QnetOptimizer = Adam(self.Qnet.parameters(), learningRate)
 
         #V 함수 네트워크 모델 & optimizer 설정
         self.Vnet = model.valueNetwork(stateNum, hiddenNum)
-        self.VnetOptimizer = Adam(self.Vnet.parameters, learningRate)
+        self.VnetOptimizer = Adam(self.Vnet.parameters(), learningRate)
 
         # target V 설정
         self.targetVnet = self.Vnet
 
 
-    def updateParameter(self, transition) :
-
-        state = transition[0]
-        action = transition[1]
-        reward = transition[2]
-        next_state = transition[3]
+    def updateParameter(self, state, action, reward, next_state) :
 
         state = torch.FloatTensor(state)
         action = torch.FloatTensor(action)
@@ -46,7 +41,7 @@ class SAC(object):
         v_current = self.targetVnet.forward(state)
 
         q1,q2 = self.Qnet.forward(state,next_action)
-        v_target = min(q1,q2) - log_pi
+        v_target = torch.min(q1,q2) - log_pi
         v_loss = F.mse_loss(v_current,v_target) # v loss 계산하기
 
         self.VnetOptimizer.zero_grad()
@@ -54,16 +49,6 @@ class SAC(object):
         self.VnetOptimizer.step()
 
         #Q 업데이트
-
-        # with torch.no_grad():
-        #     next_state_action, next_state_log_pi, _ = self.policy.sample(next_state_batch)
-        #     qf1_next_target, qf2_next_target = self.critic_target(next_state_batch, next_state_action)
-        #     min_qf_next_target = torch.min(qf1_next_target, qf2_next_target) - self.alpha * next_state_log_pi
-        #     next_q_value = reward_batch + mask_batch * self.gamma * (min_qf_next_target)
-        # qf1, qf2 = self.critic(state_batch, action_batch)  # Two Q-functions to mitigate positive bias in the policy improvement step
-        # qf1_loss = F.mse_loss(qf1, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
-        # qf2_loss = F.mse_loss(qf2, next_q_value)  # JQ = 𝔼(st,at)~D[0.5(Q1(st,at) - r(st,at) - γ(𝔼st+1~p[V(st+1)]))^2]
-        # qf_loss = qf1_loss + qf2_loss
 
         q_target = reward + gamma * self.targetVnet(state)
 
@@ -96,12 +81,11 @@ class SAC(object):
         
 
     def sample(self, state) :
-        
+        state = torch.FloatTensor(state)
         action, _, _ = self.actor.sample(state) 
-        q1,q2 = self.Qnet.forward(state, action)
-        v = self.Vnet.forward(state)
+        
 
-        return action, q1, q2, v
+        return action
 
     
 

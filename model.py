@@ -19,12 +19,12 @@ class StochasticPolicy(nn.Module) : #Gausian
         
         mean = self.meanlayer(x)
         std = self.stdlayer(x)
-
+        # std = torch.clamp(std, min=-20, max=2)
         return mean, std
 
     def sample(self, state):
         mean , std = self.forward(state)
-        normal = Normal(mean, std)
+        normal = Normal(mean, std.exp()) # 왜 std부분을 exp를 하게되는거지? normal의 std 범위가 어떻게 되지?
         x_t = normal.rsample()
         
         
@@ -33,8 +33,8 @@ class StochasticPolicy(nn.Module) : #Gausian
         action = y_t
         log_prob = normal.log_prob(x_t)
         # Enforcing Action Bound
-        log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon) #이건 왜?
-        log_prob = log_prob.sum(1, keepdim=True) # 이건 왜?
+        log_prob -= torch.log((1 - y_t.pow(2))) 
+        log_prob = log_prob.sum() # 이건 왜?
         mean = torch.tanh(mean)
         return action, log_prob, mean
 
@@ -53,11 +53,14 @@ class DoubleQnetwork(nn.Module) :
         self.hiddenlayer6 = nn.Linear(HiddenlayerNum, 1)
 
     def forward(self, state, action):
-        x = F.relu(self.hiddenlayer1(torch.cat(state,action)))
+        
+        xu = torch.cat([state,action],1)
+
+        x = F.relu(self.hiddenlayer1(xu))
         x = F.relu(self.hiddenlayer2(x))
         x = self.hiddenlayer3(x)
 
-        y = F.relu(self.hiddenlayer4(torch.cat(state,action)))
+        y = F.relu(self.hiddenlayer4(xu))
         y = F.relu(self.hiddenlayer5(y))
         y = self.hiddenlayer6(y)
 
