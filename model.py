@@ -27,7 +27,7 @@ class StochasticPolicy(nn.Module) : #Gausian
         
         mean = self.meanlayer(x)
         std = self.stdlayer(x)
-        # std = torch.clamp(std, min=-20, max=2)
+        std = torch.clamp(std, min=-20, max=2)
         return mean, std
 
     def sample(self, state):
