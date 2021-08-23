@@ -59,8 +59,9 @@ class SAC(object):
         self.VnetOptimizer.step()
 
         #Q 업데이트
-        targetV = self.targetVnet.forward(next_state)
-        q_target = reward + gamma * targetV
+        with torch.no_grad():
+            targetV = self.targetVnet.forward(next_state)
+        q_target = reward.detach() + gamma * targetV
 
         q1 = self.Qnet1.forward(state,action)
         q2 = self.Qnet2.forward(state,action)
@@ -82,8 +83,7 @@ class SAC(object):
 
 
         #actor 업데이트
-
-        policyLoss = (0.2*log_pi - q).mean()
+        policyLoss = (0.2*log_pi - q.detach()).mean()
 
         self.actorOptimizer.zero_grad()
         policyLoss.backward()
