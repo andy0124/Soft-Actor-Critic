@@ -41,7 +41,7 @@ if __name__ == '__main__':
             #근데 원래 에피소드 중에 업데이트 하는건가?
             if len(rpb.buffer)> minimum_batch_size :
                 state, action, reward, next_state = rpb.sample(batch_size)
-                sacModel.updateParameter(state, action, reward, next_state)
+                sacModel.updateParameter(state, action, reward, next_state, batch_size)
 
 
 
